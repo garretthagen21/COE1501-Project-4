@@ -8,6 +8,8 @@ public class Substitute implements SymCipher{
 	public Substitute() {
 	
 		ArrayList<Byte> randOrder = new ArrayList<Byte>();
+		key = new byte[256];
+		decode = new byte[256];
 		
 		// Java byte range goes from -128 to 127 
 		for(int i = -128; i < 128; i++) {
@@ -17,14 +19,10 @@ public class Substitute implements SymCipher{
 		Collections.shuffle(randOrder);		//Shuffle the order
 		
 		//Place the bytes into the instance array in shuffled order
-		key = new byte[256];
-		decode = new byte[256];
-		
-
 		for(int i = 0; i < key.length; i++) {
 			byte item = (byte)randOrder.get(i);	
 			key[i] = item;
-			//System.out.println(key[i]);
+			//System.out.println(0xFF & item);
 			decode[0xFF & item] = (byte)i;
 		}
 		
@@ -33,6 +31,13 @@ public class Substitute implements SymCipher{
 	}
 	public Substitute(byte [] array) {
 		key = array;
+		decode = new byte[256];
+		for(int i = 0; i < key.length;i++) {
+			decode[0xFF & key[i]] = (byte)i;
+		}
+	}
+	private void makeDecode() {
+		
 	}
 
 	@Override

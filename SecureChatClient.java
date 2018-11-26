@@ -10,7 +10,7 @@ import java.awt.*;
 public class SecureChatClient extends JFrame implements Runnable, ActionListener {
 
     public static final int PORT = 8765;
-    String encryptionType;
+    String encryptionType;  
     SymCipher cipher;
     BigInteger N;
 	BigInteger E;
@@ -30,24 +30,18 @@ public class SecureChatClient extends JFrame implements Runnable, ActionListener
     public SecureChatClient ()
     {
         try {
-        //Prompt user
-       
+        //Prompt user  
+        myName = JOptionPane.showInputDialog(this, "Enter your user name: ");
+        serverName = JOptionPane.showInputDialog(this, "Enter the server name: ");
         
-        //myName = JOptionPane.showInputDialog(this, "Enter your user name: ");
-        //serverName = JOptionPane.showInputDialog(this, "Enter the server name: ");
-        myName = "gbh8";
-        serverName = "localhost";
-        
+        	
         // Setup connection
-        
-        System.out.println("Attempting connection");
-        //System.out.flush();
-        
         InetAddress addr = InetAddress.getByName(serverName);
         connection = new Socket(addr, PORT); 
         
-        System.out.println("Setup connection!");
-        //System.out.flush();
+   
+        
+        
         streamWriter = new ObjectOutputStream(connection.getOutputStream()); // Get Writer
         streamWriter.flush();
         streamReader = new ObjectInputStream(connection.getInputStream());   // Get Reader 
@@ -58,7 +52,6 @@ public class SecureChatClient extends JFrame implements Runnable, ActionListener
         N = (BigInteger)streamReader.readObject();
         encryptionType = (String)streamReader.readObject();
         
-        System.out.println("Read objects from stream!");
         
         if(encryptionType.equals("Sub")) {
         	cipher = new Substitute();  
@@ -71,11 +64,13 @@ public class SecureChatClient extends JFrame implements Runnable, ActionListener
        
         symKey = new BigInteger(1,cipher.getKey());
         encryptSymKey = symKey.modPow(E, N); 
-        streamWriter.writeObject(symKey);
-        printHandshake();
         
-          
-        // Output encyrpted name to object stream
+        printHandshake();			//Print stats
+        
+        
+        // Output to object stream
+        streamWriter.writeObject(encryptSymKey);
+        streamWriter.flush();
         streamWriter.writeObject(cipher.encode(myName));
         streamWriter.flush();
         
@@ -124,11 +119,11 @@ public class SecureChatClient extends JFrame implements Runnable, ActionListener
     
     
     private void printHandshake() {
-    	 System.out.println("E: "+E.toString());
-    	 System.out.println("N: "+N.toString());
-    	 System.out.println("Encryption Type: "+encryptionType);
-    	 System.out.println("Symmetric Key: "+symKey.toString());
-    	 System.out.println("Encrypted Symmetric Key: "+encryptSymKey.toString());
+    	 System.out.println("\nE: "+E.toString());
+    	 System.out.println("\nN: "+N.toString()+"\n");
+    	 System.out.println("\nEncryption Type: "+encryptionType);
+    	 System.out.println("\nSymmetric Key: "+symKey.toString());
+    	 System.out.println("\nEncrypted Symmetric Key: "+encryptSymKey.toString());
     }
     
     
@@ -139,17 +134,16 @@ public class SecureChatClient extends JFrame implements Runnable, ActionListener
         while (true)
         {
              try {
-            	byte [] encryptMsgBytes = null;
-            	String currMsg;
-            	
-                streamReader.read(encryptMsgBytes);
-                currMsg = cipher.decode(encryptMsgBytes);
+            	  	
+                byte [] encryptMsgBytes = (byte[])streamReader.readObject();
+                String currMsg = cipher.decode(encryptMsgBytes);
 			    
 			  
                 outputArea.append(currMsg+"\n");
-		        System.out.println("Encrypted Message (bytes)---->   "+encryptMsgBytes.toString());
-		        System.out.println("Decrypted Message (bytes)----->   "+currMsg.getBytes().toString());
-		        System.out.println("Original Message (String)----->   "+currMsg);
+                System.out.println("\n-------------Recieved Message-----------");
+		        System.out.println("\tEncrypted Message (Bytes):   "+encryptMsgBytes);
+		        System.out.println("\tDecrypted Message (Bytes):   "+currMsg.getBytes());
+		        System.out.println("\tOriginal Message (String):   "+currMsg);
              }
              catch (Exception e)
              {
@@ -170,13 +164,14 @@ public class SecureChatClient extends JFrame implements Runnable, ActionListener
         byte [] msgBytes = currMsg.getBytes();
         byte [] encryptMsgBytes = cipher.encode(currMsg);
        
-        //Print message stuff
-        System.out.println("Original Message----->   "+currMsg);
-        System.out.println("Message in bytes----->   "+msgBytes.toString());
-        System.out.println("Encrypted message---->   "+encryptMsgBytes.toString());
+        //Print sending message stats
+        System.out.println("\n-------------Sending Message-----------");
+        System.out.println("\tOriginal Message (String):   "+currMsg);
+        System.out.println("\tDecrypted Message (Bytes):   "+msgBytes);
+        System.out.println("\tEncrypted Message (Bytes):   "+encryptMsgBytes);
  
         try {
-			streamWriter.writeObject(currMsg);
+			streamWriter.writeObject(encryptMsgBytes);
 			streamWriter.flush();
 		} catch (IOException e1) {	
 			System.out.println("There was an error sending the message: ");
@@ -186,7 +181,7 @@ public class SecureChatClient extends JFrame implements Runnable, ActionListener
 
     public static void main(String [] args)
     {
-         ImprovedChatClient JR = new ImprovedChatClient();
-         JR.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+         SecureChatClient SCC= new SecureChatClient();
+         SCC.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
     }
 }
