@@ -1,8 +1,9 @@
 public class CipherTest{
 	
 		public static void main(String args []) {
-			SymCipher addCipher = new Add128();
+			
 			SymCipher subCipher = new Substitute();
+			SymCipher addCipher = new Add128();
 			
 			String encodeString  = "The quick brown fox jumped over the lazy dog.";
 			

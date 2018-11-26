@@ -1,6 +1,7 @@
 import java.util.*;
 
 public class Add128 implements SymCipher{
+	
 	private byte [] key;
 	
 	public Add128() {
